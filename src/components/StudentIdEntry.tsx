@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudent } from "@/contexts/StudentContext";
-import { registerStudent } from "@/lib/supabase-helpers";
+import { registerStudent } from "@/lib/local-store";
 import { useKioskKeyboard } from "@/contexts/KioskKeyboardContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +64,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
     }
     setLoading(true);
     try {
-      const student = await registerStudent(studentId.trim(), firstName.trim(), lastName.trim());
+      const student = registerStudent(studentId.trim(), firstName.trim(), lastName.trim());
       if (student) {
         await identify(studentId.trim());
         toast.success(`Welcome, ${student.first_name}! You're registered.`);
@@ -77,7 +77,6 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
     }
   };
 
-  // Numeric setter that strips non-digits
   const setStudentIdNumeric = useCallback((val: string) => {
     setStudentId(val.replace(/\D/g, ""));
   }, []);

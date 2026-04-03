@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useStudent } from "@/contexts/StudentContext";
 import { useKioskKeyboard } from "@/contexts/KioskKeyboardContext";
 import StudentIdEntry from "@/components/StudentIdEntry";
-import { getAvailableItems, getItemCategories, checkoutItem } from "@/lib/supabase-helpers";
+import { getAvailableItems, getItemCategories, checkoutItem } from "@/lib/local-store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,15 +39,14 @@ export default function Checkout() {
   useEffect(() => {
     if (student) {
       loadItems();
-      getItemCategories().then(setCategories);
+      setCategories(getItemCategories());
     }
   }, [student, selectedCategory]);
 
-  const loadItems = async () => {
+  const loadItems = () => {
     setLoading(true);
     try {
-      const data = await getAvailableItems(selectedCategory);
-      setItems(data);
+      setItems(getAvailableItems(selectedCategory));
     } catch {
       toast.error("Failed to load available items. Please try again.");
     } finally {
@@ -86,7 +85,7 @@ export default function Checkout() {
     setTeacher("");
   };
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (!student || selectedItems.size === 0) return;
     resetTimer();
     detachInput();
@@ -103,7 +102,7 @@ export default function Checkout() {
     try {
       const itemIds = Array.from(selectedItems);
       for (const itemId of itemIds) {
-        await checkoutItem(student.id, itemId, days, reason.trim(), teacher.trim() || undefined);
+        checkoutItem(student.id, itemId, days, reason.trim(), teacher.trim() || undefined);
       }
       toast.success(`${itemIds.length} item${itemIds.length > 1 ? "s" : ""} checked out successfully!`);
       closeCheckoutForm();

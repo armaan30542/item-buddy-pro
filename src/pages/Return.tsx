@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudent } from "@/contexts/StudentContext";
 import StudentIdEntry from "@/components/StudentIdEntry";
-import { getActiveStudentLoans, returnItem } from "@/lib/supabase-helpers";
+import { getActiveStudentLoans, returnItem } from "@/lib/local-store";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
 export default function Return() {
-  const { student, clear } = useStudent();
+  const { student } = useStudent();
   const navigate = useNavigate();
   const [loans, setLoans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -19,12 +19,11 @@ export default function Return() {
     if (student) loadLoans();
   }, [student]);
 
-  const loadLoans = async () => {
+  const loadLoans = () => {
     if (!student) return;
     setLoading(true);
     try {
-      const data = await getActiveStudentLoans(student.id);
-      setLoans(data);
+      setLoans(getActiveStudentLoans(student.id));
     } catch {
       toast.error("Failed to load loans");
     } finally {
@@ -32,10 +31,10 @@ export default function Return() {
     }
   };
 
-  const handleReturn = async (loanId: string) => {
+  const handleReturn = (loanId: string) => {
     setReturning(loanId);
     try {
-      await returnItem(loanId);
+      returnItem(loanId);
       toast.success("Item returned successfully!");
       loadLoans();
     } catch (e: any) {
@@ -43,10 +42,6 @@ export default function Return() {
     } finally {
       setReturning(null);
     }
-  };
-
-  const handleBack = () => {
-    navigate("/");
   };
 
   if (!student) {
@@ -58,7 +53,7 @@ export default function Return() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="mx-auto max-w-3xl animate-fade-in">
-        <button onClick={handleBack} className="mb-4 flex items-center gap-2 text-muted-foreground hover:text-foreground touch-target">
+        <button onClick={() => navigate("/")} className="mb-4 flex items-center gap-2 text-muted-foreground hover:text-foreground touch-target">
           <ArrowLeft className="h-5 w-5" />
           <span>Back</span>
         </button>

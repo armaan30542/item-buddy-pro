@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getAllItems, addItem, updateItemStatus, getActiveItemLoan, getItemLoans, type Item, type ItemStatus } from "@/lib/local-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,8 +17,8 @@ const STATUS_STYLES: Record<string, string> = {
   retired: "status-maintenance",
 };
 
-export default function InventoryTab({ isAdmin }: { isAdmin: boolean }) {
-  const [items, setItems] = useState<any[]>([]);
+export default function InventoryTab() {
+  const [items, setItems] = useState<Item[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -29,74 +28,55 @@ export default function InventoryTab({ isAdmin }: { isAdmin: boolean }) {
   });
   const [saving, setSaving] = useState(false);
 
-  // Detail dialog state
   const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [activeLoan, setActiveLoan] = useState<any>(null);
   const [loanHistory, setLoanHistory] = useState<any[]>([]);
-  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => { loadItems(); }, []);
 
-  const loadItems = async () => {
+  const loadItems = () => {
     setLoading(true);
-    const { data } = await supabase.from("items").select("*").order("name");
-    setItems(data ?? []);
+    setItems(getAllItems());
     setLoading(false);
   };
 
-  const handleItemClick = async (item: any) => {
+  const handleItemClick = (item: Item) => {
     setSelectedItem(item);
     setDetailOpen(true);
-    setDetailLoading(true);
-    setActiveLoan(null);
-    setLoanHistory([]);
-
-    const [activeRes, historyRes] = await Promise.all([
-      supabase
-        .from("loans")
-        .select("*, students(*)")
-        .eq("item_id", item.id)
-        .in("status", ["active", "overdue"])
-        .maybeSingle(),
-      supabase
-        .from("loans")
-        .select("*, students(*)")
-        .eq("item_id", item.id)
-        .order("checkout_at", { ascending: false })
-        .limit(20),
-    ]);
-
-    setActiveLoan(activeRes.data ?? null);
-    setLoanHistory(historyRes.data ?? []);
-    setDetailLoading(false);
+    setActiveLoan(getActiveItemLoan(item.id));
+    setLoanHistory(getItemLoans(item.id).slice(0, 20));
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.asset_tag || !form.name) {
       toast.error("Asset Tag and Name are required");
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("items").insert({
-      ...form,
-      default_loan_duration: parseInt(form.default_loan_duration) || 1,
-    });
-    if (error) {
-      toast.error(error.message);
-    } else {
+    try {
+      addItem({
+        ...form,
+        default_loan_duration: parseInt(form.default_loan_duration) || 1,
+      });
       toast.success("Item added");
       setDialogOpen(false);
       setForm({ asset_tag: "", name: "", category: "General", description: "", condition: "Good", location: "", default_loan_duration: "1" });
       loadItems();
+    } catch (e: any) {
+      toast.error(e.message);
     }
     setSaving(false);
   };
 
-  const updateStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("items").update({ status: status as any }).eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Status updated"); loadItems(); }
+  const handleUpdateStatus = (id: string, status: string) => {
+    try {
+      updateItemStatus(id, status as ItemStatus);
+      toast.success("Status updated");
+      loadItems();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   const filtered = items.filter(
@@ -113,28 +93,26 @@ export default function InventoryTab({ isAdmin }: { isAdmin: boolean }) {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
         </div>
-        {isAdmin && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button><Plus className="mr-1 h-4 w-4" /> Add Item</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Add New Item</DialogTitle></DialogHeader>
-              <div className="grid gap-3">
-                <div><Label>Asset Tag *</Label><Input value={form.asset_tag} onChange={(e) => setForm({ ...form, asset_tag: e.target.value })} /></div>
-                <div><Label>Name *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-                <div><Label>Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
-                <div><Label>Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-                <div><Label>Condition</Label><Input value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })} /></div>
-                <div><Label>Location</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
-                <div><Label>Loan Duration (days)</Label><Input type="number" value={form.default_loan_duration} onChange={(e) => setForm({ ...form, default_loan_duration: e.target.value })} /></div>
-                <Button onClick={handleSave} disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Item"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button><Plus className="mr-1 h-4 w-4" /> Add Item</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Add New Item</DialogTitle></DialogHeader>
+            <div className="grid gap-3">
+              <div><Label>Asset Tag *</Label><Input value={form.asset_tag} onChange={(e) => setForm({ ...form, asset_tag: e.target.value })} /></div>
+              <div><Label>Name *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div><Label>Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
+              <div><Label>Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div><Label>Condition</Label><Input value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })} /></div>
+              <div><Label>Location</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
+              <div><Label>Loan Duration (days)</Label><Input type="number" value={form.default_loan_duration} onChange={(e) => setForm({ ...form, default_loan_duration: e.target.value })} /></div>
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Item"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {loading ? (
@@ -169,7 +147,7 @@ export default function InventoryTab({ isAdmin }: { isAdmin: boolean }) {
                     </span>
                   </td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                    <Select value={item.status} onValueChange={(v) => updateStatus(item.id, v)}>
+                    <Select value={item.status} onValueChange={(v) => handleUpdateStatus(item.id, v)}>
                       <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="available">Available</SelectItem>
@@ -196,11 +174,8 @@ export default function InventoryTab({ isAdmin }: { isAdmin: boolean }) {
             </DialogTitle>
           </DialogHeader>
 
-          {detailLoading ? (
-            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-          ) : selectedItem && (
+          {selectedItem && (
             <div className="space-y-5">
-              {/* Item Details */}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">Asset Tag</span><p className="font-mono font-semibold">{selectedItem.asset_tag}</p></div>
                 <div><span className="text-muted-foreground">Category</span><p className="font-medium">{selectedItem.category}</p></div>
@@ -216,15 +191,12 @@ export default function InventoryTab({ isAdmin }: { isAdmin: boolean }) {
                 )}
               </div>
 
-              {/* Current Borrower */}
               {activeLoan && (
                 <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
                   <h3 className="font-semibold text-sm">Currently Checked Out By</h3>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div><span className="text-muted-foreground">Name</span><p className="font-medium">{activeLoan.students?.first_name} {activeLoan.students?.last_name}</p></div>
                     <div><span className="text-muted-foreground">Student ID</span><p className="font-mono font-medium">{activeLoan.students?.student_id}</p></div>
-                    <div><span className="text-muted-foreground">Email</span><p className="font-medium">{activeLoan.students?.email || "—"}</p></div>
-                    <div><span className="text-muted-foreground">Status</span><p className="font-medium">{activeLoan.status}</p></div>
                     <div><span className="text-muted-foreground">Checked Out</span><p className="font-medium">{format(new Date(activeLoan.checkout_at), "MMM d, yyyy")}</p></div>
                     <div><span className="text-muted-foreground">Due Date</span><p className="font-medium">{format(new Date(activeLoan.due_date), "MMM d, yyyy")}</p></div>
                     {activeLoan.reason && <div className="col-span-2"><span className="text-muted-foreground">Reason</span><p className="font-medium">{activeLoan.reason}</p></div>}
@@ -233,7 +205,6 @@ export default function InventoryTab({ isAdmin }: { isAdmin: boolean }) {
                 </div>
               )}
 
-              {/* Loan History */}
               {loanHistory.length > 0 && (
                 <div>
                   <h3 className="font-semibold text-sm mb-2">Loan History</h3>

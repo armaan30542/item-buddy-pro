@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Monitor, RotateCcw, Shield, Moon, Sun } from "lucide-react";
+import { Monitor, RotateCcw, Settings, Moon, Sun } from "lucide-react";
 import { useStudent } from "@/contexts/StudentContext";
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
@@ -66,11 +66,11 @@ const Index = () => {
         </button>
 
         <button
-          onClick={() => navigate("/staff-login")}
+          onClick={() => navigate("/admin")}
           className="kiosk-btn kiosk-btn-secondary col-span-2"
         >
-          <Shield className="h-12 w-12" />
-          <span>Staff Login</span>
+          <Settings className="h-12 w-12" />
+          <span>Manage</span>
         </button>
       </div>
 

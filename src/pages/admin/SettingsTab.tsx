@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getSettings, saveSettings } from "@/lib/local-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,27 +7,19 @@ import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SettingsTab() {
-  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [settings, setSettingsState] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadSettings(); }, []);
-
-  const loadSettings = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("settings").select("*");
-    const map: Record<string, string> = {};
-    (data ?? []).forEach((s) => { map[s.key] = s.value; });
-    setSettings(map);
+  useEffect(() => {
+    setSettingsState(getSettings());
     setLoading(false);
-  };
+  }, []);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setSaving(true);
     try {
-      for (const [key, value] of Object.entries(settings)) {
-        await supabase.from("settings").update({ value }).eq("key", key);
-      }
+      saveSettings(settings);
       toast.success("Settings saved");
     } catch {
       toast.error("Failed to save settings");
@@ -36,7 +28,7 @@ export default function SettingsTab() {
   };
 
   const update = (key: string, value: string) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    setSettingsState((prev) => ({ ...prev, [key]: value }));
   };
 
   if (loading) {
@@ -50,15 +42,6 @@ export default function SettingsTab() {
         { key: "default_loan_duration", label: "Default Loan Duration (days)", type: "number" },
         { key: "max_items_per_student", label: "Max Items Per Student", type: "number" },
         { key: "overdue_reminder_days", label: "Overdue Reminder After (days)", type: "number" },
-      ],
-    },
-    {
-      title: "Email / SMTP Settings",
-      fields: [
-        { key: "smtp_host", label: "SMTP Host", type: "text" },
-        { key: "smtp_port", label: "SMTP Port", type: "text" },
-        { key: "smtp_user", label: "SMTP Username", type: "text" },
-        { key: "smtp_from", label: "From Email Address", type: "email" },
       ],
     },
     {

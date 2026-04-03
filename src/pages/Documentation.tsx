@@ -230,8 +230,8 @@ export default function Documentation() {
               <tbody>
                 <tr><td>Frontend</td><td>React + TypeScript + Vite</td></tr>
                 <tr><td>Styling</td><td>Tailwind CSS + shadcn/ui components</td></tr>
-                <tr><td>Backend</td><td>Supabase (PostgreSQL database, auth, Edge Functions)</td></tr>
-                <tr><td>Hosting</td><td>Self-hosted or any static hosting provider</td></tr>
+                <tr><td>Data Storage</td><td>Browser localStorage (no backend needed)</td></tr>
+                <tr><td>Hosting</td><td>Any static hosting provider, or run locally</td></tr>
                 <tr><td>Font</td><td>Poppins (Google Fonts)</td></tr>
                 <tr><td>Theme</td><td>Dark mode by default, toggleable</td></tr>
               </tbody>
@@ -245,7 +245,7 @@ export default function Documentation() {
           <ol>
             <li>Build the app with <code>npm run build</code> and serve the <code>dist/</code> folder with any static server (e.g., Nginx, Caddy, or <code>npx serve dist</code>)</li>
             <li>Open the app URL in a full-screen browser (Chromium kiosk mode)</li>
-            <li>Ensure the Pi has internet access to reach the Supabase backend</li>
+            <li>No internet required — all data is stored locally in the browser</li>
             <li>The virtual keyboard handles all input on touchscreens</li>
           </ol>
 

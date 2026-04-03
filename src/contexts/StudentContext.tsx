@@ -1,19 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
-import { lookupStudent } from "@/lib/supabase-helpers";
-
-interface StudentData {
-  id: string;
-  student_id: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  grade: string | null;
-  max_items: number;
-}
+import { lookupStudent, type Student } from "@/lib/local-store";
 
 interface StudentContextType {
-  student: StudentData | null;
-  identify: (studentId: string) => Promise<StudentData | null>;
+  student: Student | null;
+  identify: (studentId: string) => Promise<Student | null>;
   clear: () => void;
   resetTimer: () => void;
 }
@@ -23,7 +13,7 @@ const INACTIVITY_TIMEOUT = 60_000; // 60 seconds
 const StudentContext = createContext<StudentContextType | undefined>(undefined);
 
 export function StudentProvider({ children }: { children: React.ReactNode }) {
-  const [student, setStudent] = useState<StudentData | null>(null);
+  const [student, setStudent] = useState<Student | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearTimer = () => {
@@ -51,15 +41,14 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
   }, [student, startTimer]);
 
   const identify = useCallback(async (studentId: string) => {
-    const data = await lookupStudent(studentId);
+    const data = lookupStudent(studentId);
     if (data) {
-      setStudent(data as StudentData);
-      return data as StudentData;
+      setStudent(data);
+      return data;
     }
     return null;
   }, []);
 
-  // Start/restart timer whenever student changes
   useEffect(() => {
     if (student) {
       startTimer();

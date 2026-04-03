@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getAllLoans } from "@/lib/local-store";
 import { useKioskKeyboard } from "@/contexts/KioskKeyboardContext";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -7,23 +7,19 @@ import { Search, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 
-export default function LoansTab({ isAdmin }: { isAdmin: boolean }) {
+export default function LoansTab() {
   const [loans, setLoans] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "overdue" | "returned">("all");
   const [loading, setLoading] = useState(true);
-  const { attachInput, detachInput } = useKioskKeyboard();
+  const { attachInput } = useKioskKeyboard();
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { loadLoans(); }, []);
 
-  const loadLoans = async () => {
+  const loadLoans = () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("loans")
-      .select("*, items(name, asset_tag), students(student_id, first_name, last_name)")
-      .order("checkout_at", { ascending: false });
-    setLoans(data ?? []);
+    setLoans(getAllLoans());
     setLoading(false);
   };
 

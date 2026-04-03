@@ -2,40 +2,26 @@
 
 School IT Equipment Checkout System — a kiosk-friendly web app for managing equipment loans to students.
 
+**No backend, no login, no accounts needed.** All data is stored in the browser's localStorage.
+
 ## Tech Stack
 
 - **Frontend:** React + TypeScript + Vite
 - **UI:** Tailwind CSS + shadcn/ui
-- **Backend:** Supabase (PostgreSQL, Auth, Edge Functions)
+- **Data:** Browser localStorage (zero backend)
 
 ## Getting Started
 
 Requires [Node.js](https://github.com/nvm-sh/nvm#installing-and-updating) (v18+).
 
 ```sh
-# Clone the repo
 git clone <YOUR_GIT_URL>
 cd item-buddy-pro
-
-# Install dependencies
 npm install
-
-# Create a .env file with your Supabase credentials
-cp .env.example .env
-# Edit .env and set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY
-
-# Start the dev server
 npm run dev
 ```
 
-The app runs at `http://localhost:8080` by default.
-
-## Environment Variables
-
-| Variable | Description |
-|---|---|
-| `VITE_SUPABASE_URL` | Your Supabase project URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase anon/public key |
+The app runs at `http://localhost:8080`. That's it — no env vars, no database, no config.
 
 ## Building for Production
 
@@ -43,20 +29,23 @@ The app runs at `http://localhost:8080` by default.
 npm run build
 ```
 
-This outputs a static site to `dist/`. Serve it with any static file server (Nginx, Caddy, `npx serve dist`, etc.).
-
-## Deploying Supabase
-
-The `supabase/` directory contains database migrations and Edge Functions. Use the [Supabase CLI](https://supabase.com/docs/guides/cli) to deploy:
+Outputs a static site to `dist/`. Serve it with anything:
 
 ```sh
-supabase link --project-ref <your-project-ref>
-supabase db push
-supabase functions deploy
+npx serve dist
 ```
+
+Or deploy to Netlify, Vercel, GitHub Pages, a Raspberry Pi — anywhere that can serve static files.
 
 ## Kiosk Mode (Raspberry Pi)
 
 1. Build the app and serve the `dist/` folder
 2. Open in Chromium kiosk mode: `chromium-browser --kiosk http://localhost:3000`
 3. The built-in virtual keyboard handles touchscreen input
+4. No internet connection required
+
+## How It Works
+
+- **Students** enter their ID at the kiosk to check out / return equipment
+- **Manage** tab lets you add inventory, manage students, view loans, and configure settings
+- All data lives in `localStorage` — clearing browser data resets everything

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudent } from "@/contexts/StudentContext";
 import StudentIdEntry from "@/components/StudentIdEntry";
-import { getStudentLoans, returnItem } from "@/lib/supabase-helpers";
+import { getStudentLoans, returnItem } from "@/lib/local-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,10 +23,13 @@ export default function MyItems() {
   useEffect(() => {
     if (student) {
       setLoading(true);
-      getStudentLoans(student.id)
-        .then(setLoans)
-        .catch(() => toast.error("Failed to load items"))
-        .finally(() => setLoading(false));
+      try {
+        setLoans(getStudentLoans(student.id));
+      } catch {
+        toast.error("Failed to load items");
+      } finally {
+        setLoading(false);
+      }
     }
   }, [student]);
 
@@ -35,13 +38,12 @@ export default function MyItems() {
     navigate("/");
   };
 
-  const handleReturn = async (loanId: string) => {
+  const handleReturn = (loanId: string) => {
     setReturning(loanId);
     try {
-      await returnItem(loanId);
+      returnItem(loanId);
       toast.success("Item returned successfully!");
-      const updated = await getStudentLoans(student!.id);
-      setLoans(updated);
+      setLoans(getStudentLoans(student!.id));
     } catch (e: any) {
       toast.error(e.message || "Failed to return item");
     } finally {
