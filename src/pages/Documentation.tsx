@@ -230,8 +230,8 @@ export default function Documentation() {
               <tbody>
                 <tr><td>Frontend</td><td>React + TypeScript + Vite</td></tr>
                 <tr><td>Styling</td><td>Tailwind CSS + shadcn/ui components</td></tr>
-                <tr><td>Backend</td><td>Lovable Cloud (database, auth, serverless functions)</td></tr>
-                <tr><td>Hosting</td><td>Lovable (lovable.app domain, or custom domain)</td></tr>
+                <tr><td>Backend</td><td>Supabase (PostgreSQL database, auth, Edge Functions)</td></tr>
+                <tr><td>Hosting</td><td>Self-hosted or any static hosting provider</td></tr>
                 <tr><td>Font</td><td>Poppins (Google Fonts)</td></tr>
                 <tr><td>Theme</td><td>Dark mode by default, toggleable</td></tr>
               </tbody>
@@ -243,9 +243,9 @@ export default function Documentation() {
           {/* ── Deployment ── */}
           <h2>How to Deploy on a Raspberry Pi Kiosk</h2>
           <ol>
-            <li>Open the published URL (e.g., <code>https://item-buddy-pro.lovable.app</code>) in a full-screen browser (Chromium kiosk mode)</li>
-            <li>No software installation needed — it's a web app</li>
-            <li>Ensure the Pi has internet access to reach the backend</li>
+            <li>Build the app with <code>npm run build</code> and serve the <code>dist/</code> folder with any static server (e.g., Nginx, Caddy, or <code>npx serve dist</code>)</li>
+            <li>Open the app URL in a full-screen browser (Chromium kiosk mode)</li>
+            <li>Ensure the Pi has internet access to reach the Supabase backend</li>
             <li>The virtual keyboard handles all input on touchscreens</li>
           </ol>
 

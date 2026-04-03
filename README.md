@@ -1,73 +1,62 @@
-# Welcome to your Lovable project
+# Item Buddy Pro
 
-## Project info
+School IT Equipment Checkout System — a kiosk-friendly web app for managing equipment loans to students.
 
-**URL**: https://item-buddy-pro.lovable.app
+## Tech Stack
 
-## How can I edit this code?
+- **Frontend:** React + TypeScript + Vite
+- **UI:** Tailwind CSS + shadcn/ui
+- **Backend:** Supabase (PostgreSQL, Auth, Edge Functions)
 
-There are several ways of editing your application.
+## Getting Started
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Requires [Node.js](https://github.com/nvm-sh/nvm#installing-and-updating) (v18+).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repo
 git clone <YOUR_GIT_URL>
+cd item-buddy-pro
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Install dependencies
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Create a .env file with your Supabase credentials
+cp .env.example .env
+# Edit .env and set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the dev server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app runs at `http://localhost:8080` by default.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Environment Variables
 
-**Use GitHub Codespaces**
+| Variable | Description |
+|---|---|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase anon/public key |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Building for Production
 
-## What technologies are used for this project?
+```sh
+npm run build
+```
 
-This project is built with:
+This outputs a static site to `dist/`. Serve it with any static file server (Nginx, Caddy, `npx serve dist`, etc.).
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Deploying Supabase
 
-## How can I deploy this project?
+The `supabase/` directory contains database migrations and Edge Functions. Use the [Supabase CLI](https://supabase.com/docs/guides/cli) to deploy:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```sh
+supabase link --project-ref <your-project-ref>
+supabase db push
+supabase functions deploy
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Kiosk Mode (Raspberry Pi)
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. Build the app and serve the `dist/` folder
+2. Open in Chromium kiosk mode: `chromium-browser --kiosk http://localhost:3000`
+3. The built-in virtual keyboard handles touchscreen input
