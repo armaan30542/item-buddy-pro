@@ -12,14 +12,16 @@ export default function SettingsTab() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setSettingsState(getSettings());
-    setLoading(false);
+    getSettings().then((s) => {
+      setSettingsState(s);
+      setLoading(false);
+    });
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
     try {
-      saveSettings(settings);
+      await saveSettings(settings);
       toast.success("Settings saved");
     } catch {
       toast.error("Failed to save settings");
@@ -61,12 +63,7 @@ export default function SettingsTab() {
             {group.fields.map((field) => (
               <div key={field.key}>
                 <Label>{field.label}</Label>
-                <Input
-                  type={field.type}
-                  value={settings[field.key] ?? ""}
-                  onChange={(e) => update(field.key, e.target.value)}
-                  className="mt-1"
-                />
+                <Input type={field.type} value={settings[field.key] ?? ""} onChange={(e) => update(field.key, e.target.value)} className="mt-1" />
               </div>
             ))}
           </div>

@@ -32,48 +32,52 @@ export default function InventoryTab() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [activeLoan, setActiveLoan] = useState<any>(null);
   const [loanHistory, setLoanHistory] = useState<any[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => { loadItems(); }, []);
 
-  const loadItems = () => {
+  const loadItems = async () => {
     setLoading(true);
-    setItems(getAllItems());
+    setItems(await getAllItems());
     setLoading(false);
   };
 
-  const handleItemClick = (item: Item) => {
+  const handleItemClick = async (item: Item) => {
     setSelectedItem(item);
     setDetailOpen(true);
-    setActiveLoan(getActiveItemLoan(item.id));
-    setLoanHistory(getItemLoans(item.id).slice(0, 20));
+    setDetailLoading(true);
+    const [active, history] = await Promise.all([
+      getActiveItemLoan(item.id),
+      getItemLoans(item.id),
+    ]);
+    setActiveLoan(active);
+    setLoanHistory(history.slice(0, 20));
+    setDetailLoading(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.asset_tag || !form.name) {
       toast.error("Asset Tag and Name are required");
       return;
     }
     setSaving(true);
     try {
-      addItem({
-        ...form,
-        default_loan_duration: parseInt(form.default_loan_duration) || 1,
-      });
+      await addItem({ ...form, default_loan_duration: parseInt(form.default_loan_duration) || 1 });
       toast.success("Item added");
       setDialogOpen(false);
       setForm({ asset_tag: "", name: "", category: "General", description: "", condition: "Good", location: "", default_loan_duration: "1" });
-      loadItems();
+      await loadItems();
     } catch (e: any) {
       toast.error(e.message);
     }
     setSaving(false);
   };
 
-  const handleUpdateStatus = (id: string, status: string) => {
+  const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      updateItemStatus(id, status as ItemStatus);
+      await updateItemStatus(id, status as ItemStatus);
       toast.success("Status updated");
-      loadItems();
+      await loadItems();
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -94,9 +98,7 @@ export default function InventoryTab() {
           <Input placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="mr-1 h-4 w-4" /> Add Item</Button>
-          </DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> Add Item</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Add New Item</DialogTitle></DialogHeader>
             <div className="grid gap-3">
@@ -107,9 +109,7 @@ export default function InventoryTab() {
               <div><Label>Condition</Label><Input value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })} /></div>
               <div><Label>Location</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
               <div><Label>Loan Duration (days)</Label><Input type="number" value={form.default_loan_duration} onChange={(e) => setForm({ ...form, default_loan_duration: e.target.value })} /></div>
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Item"}
-              </Button>
+              <Button onClick={handleSave} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Item"}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -132,20 +132,12 @@ export default function InventoryTab() {
             </thead>
             <tbody>
               {filtered.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b last:border-0 hover:bg-muted/30 cursor-pointer"
-                  onClick={() => handleItemClick(item)}
-                >
+                <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => handleItemClick(item)}>
                   <td className="px-4 py-3 font-mono text-xs">{item.asset_tag}</td>
                   <td className="px-4 py-3 font-medium">{item.name}</td>
                   <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{item.category}</td>
                   <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{item.location || "—"}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLES[item.status] || ""}`}>
-                      {item.status.replace("_", " ")}
-                    </span>
-                  </td>
+                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLES[item.status] || ""}`}>{item.status.replace("_", " ")}</span></td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <Select value={item.status} onValueChange={(v) => handleUpdateStatus(item.id, v)}>
                       <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
@@ -164,17 +156,12 @@ export default function InventoryTab() {
         </div>
       )}
 
-      {/* Item Detail Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              {selectedItem?.name}
-            </DialogTitle>
-          </DialogHeader>
-
-          {selectedItem && (
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Package className="h-5 w-5" />{selectedItem?.name}</DialogTitle></DialogHeader>
+          {detailLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          ) : selectedItem && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">Asset Tag</span><p className="font-mono font-semibold">{selectedItem.asset_tag}</p></div>
@@ -182,15 +169,9 @@ export default function InventoryTab() {
                 <div><span className="text-muted-foreground">Condition</span><p className="font-medium">{selectedItem.condition || "—"}</p></div>
                 <div><span className="text-muted-foreground">Location</span><p className="font-medium">{selectedItem.location || "—"}</p></div>
                 <div><span className="text-muted-foreground">Loan Duration</span><p className="font-medium">{selectedItem.default_loan_duration} day(s)</p></div>
-                <div>
-                  <span className="text-muted-foreground">Status</span>
-                  <p><span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLES[selectedItem.status] || ""}`}>{selectedItem.status.replace("_", " ")}</span></p>
-                </div>
-                {selectedItem.description && (
-                  <div className="col-span-2"><span className="text-muted-foreground">Description</span><p className="font-medium">{selectedItem.description}</p></div>
-                )}
+                <div><span className="text-muted-foreground">Status</span><p><span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLES[selectedItem.status] || ""}`}>{selectedItem.status.replace("_", " ")}</span></p></div>
+                {selectedItem.description && <div className="col-span-2"><span className="text-muted-foreground">Description</span><p className="font-medium">{selectedItem.description}</p></div>}
               </div>
-
               {activeLoan && (
                 <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
                   <h3 className="font-semibold text-sm">Currently Checked Out By</h3>
@@ -204,22 +185,16 @@ export default function InventoryTab() {
                   </div>
                 </div>
               )}
-
               {loanHistory.length > 0 && (
                 <div>
                   <h3 className="font-semibold text-sm mb-2">Loan History</h3>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {loanHistory.map((loan) => (
                       <div key={loan.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-xs">
-                        <div>
-                          <span className="font-medium">{loan.students?.first_name} {loan.students?.last_name}</span>
-                          <span className="text-muted-foreground ml-2">({loan.students?.student_id})</span>
-                        </div>
+                        <div><span className="font-medium">{loan.students?.first_name} {loan.students?.last_name}</span><span className="text-muted-foreground ml-2">({loan.students?.student_id})</span></div>
                         <div className="text-right text-muted-foreground">
                           <div>{format(new Date(loan.checkout_at), "MMM d, yyyy")}</div>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${loan.status === "returned" ? "bg-green-100 text-green-700" : loan.status === "overdue" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>
-                            {loan.status}
-                          </span>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${loan.status === "returned" ? "bg-green-100 text-green-700" : loan.status === "overdue" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>{loan.status}</span>
                         </div>
                       </div>
                     ))}

@@ -64,7 +64,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
     }
     setLoading(true);
     try {
-      const student = registerStudent(studentId.trim(), firstName.trim(), lastName.trim());
+      const student = await registerStudent(studentId.trim(), firstName.trim(), lastName.trim());
       if (student) {
         await identify(studentId.trim());
         toast.success(`Welcome, ${student.first_name}! You're registered.`);
