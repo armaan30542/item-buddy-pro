@@ -43,7 +43,7 @@ export default function MyItems() {
     try {
       returnItem(loanId);
       toast.success("Item returned successfully!");
-      setLoans(getStudentLoans(student!.id));
+      setLoans(await getStudentLoans(student!.id));
     } catch (e: any) {
       toast.error(e.message || "Failed to return item");
     } finally {
@@ -79,13 +79,9 @@ export default function MyItems() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+          <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
         ) : loans.length === 0 ? (
-          <div className="rounded-xl border bg-card p-12 text-center">
-            <p className="text-lg text-muted-foreground">No loan history</p>
-          </div>
+          <div className="rounded-xl border bg-card p-12 text-center"><p className="text-lg text-muted-foreground">No loan history</p></div>
         ) : (
           <div className="grid gap-3">
             {loans.map((loan) => (
@@ -98,48 +94,29 @@ export default function MyItems() {
                     </div>
                     <div className="mt-1 text-sm text-muted-foreground">
                       Checked out: {format(new Date(loan.checkout_at), "MMM d, yyyy")}
-                      {" • "}
-                      Due: {format(new Date(loan.due_date), "MMM d, yyyy")}
-                      {loan.return_at && (
-                        <> • Returned: {format(new Date(loan.return_at), "MMM d, yyyy")}</>
-                      )}
+                      {" • "}Due: {format(new Date(loan.due_date), "MMM d, yyyy")}
+                      {loan.return_at && <> • Returned: {format(new Date(loan.return_at), "MMM d, yyyy")}</>}
                     </div>
-                    {loan.reason && (
-                      <div className="mt-1 text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">Reason:</span> {loan.reason}
-                      </div>
-                    )}
-                    {loan.teacher && (
-                      <div className="mt-0.5 text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">Teacher:</span> {loan.teacher}
-                      </div>
-                    )}
+                    {loan.reason && <div className="mt-1 text-sm text-muted-foreground"><span className="font-medium text-foreground">Reason:</span> {loan.reason}</div>}
+                    {loan.teacher && <div className="mt-0.5 text-sm text-muted-foreground"><span className="font-medium text-foreground">Teacher:</span> {loan.teacher}</div>}
                   </div>
                   <div className="flex items-center gap-2">
                     {loan.status !== "returned" && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button size="sm" variant="outline" disabled={returning === loan.id}>
-                            {returning === loan.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <RotateCcw className="h-4 w-4" />
-                            )}
+                            {returning === loan.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                             Return
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Return {loan.items?.name}?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will mark the item as returned and make it available for others.
-                            </AlertDialogDescription>
+                            <AlertDialogDescription>This will mark the item as returned and make it available for others.</AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleReturn(loan.id)}>
-                              Confirm Return
-                            </AlertDialogAction>
+                            <AlertDialogAction onClick={() => handleReturn(loan.id)}>Confirm Return</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>

@@ -2,13 +2,14 @@
 
 School IT Equipment Checkout System — a kiosk-friendly web app for managing equipment loans to students.
 
-**No backend, no login, no accounts needed.** All data is stored in the browser's localStorage.
+**No database, no cloud, no accounts needed.** All data is stored in a single JSON file on the server. Multiple devices on the same network share the same inventory.
 
 ## Tech Stack
 
 - **Frontend:** React + TypeScript + Vite
 - **UI:** Tailwind CSS + shadcn/ui
-- **Data:** Browser localStorage (zero backend)
+- **Server:** Express.js (serves the app + reads/writes a JSON file)
+- **Data:** `data.json` (auto-created from `public/seed.json` on first run)
 
 ## Getting Started
 
@@ -18,34 +19,39 @@ Requires [Node.js](https://github.com/nvm-sh/nvm#installing-and-updating) (v18+)
 git clone <YOUR_GIT_URL>
 cd item-buddy-pro
 npm install
-npm run dev
+npm start
 ```
 
-The app runs at `http://localhost:8080`. That's it — no env vars, no database, no config.
+This builds the app and starts the server at `http://localhost:3001`. Open that URL on any device on the same network.
 
-## Building for Production
+### Development Mode
 
 ```sh
-npm run build
+# Terminal 1: start the API server
+npm run server
+
+# Terminal 2: start the Vite dev server (with hot reload)
+VITE_API_URL=http://localhost:3001 npm run dev
 ```
 
-Outputs a static site to `dist/`. Serve it with anything:
+## How Multiple Devices Work
 
-```sh
-npx serve dist
+```
+[Kiosk iPad]  ──┐
+[Teacher Laptop] ──┼── all talk to ──→  [One computer running: npm start]
+[Office PC]  ──┘                              └── data.json (shared data)
 ```
 
-Or deploy to Netlify, Vercel, GitHub Pages, a Raspberry Pi — anywhere that can serve static files.
+All devices connect to the same server. When someone checks out an item on one device, every other device sees it immediately.
+
+## Editing Inventory
+
+Edit `public/seed.json` to change the starting inventory. This file is only used to create `data.json` on first run. After that, all changes happen through the app.
+
+To reset to seed data, stop the server and delete `data.json`.
 
 ## Kiosk Mode (Raspberry Pi)
 
-1. Build the app and serve the `dist/` folder
-2. Open in Chromium kiosk mode: `chromium-browser --kiosk http://localhost:3000`
+1. Run `npm start` on the Pi (or any computer on the network)
+2. Open `http://<server-ip>:3001` in Chromium kiosk mode
 3. The built-in virtual keyboard handles touchscreen input
-4. No internet connection required
-
-## How It Works
-
-- **Students** enter their ID at the kiosk to check out / return equipment
-- **Manage** tab lets you add inventory, manage students, view loans, and configure settings
-- All data lives in `localStorage` — clearing browser data resets everything

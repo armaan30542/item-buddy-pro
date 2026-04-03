@@ -19,7 +19,7 @@ export default function StudentsTab() {
 
   const loadStudents = () => {
     setLoading(true);
-    setStudents(getAllStudents());
+    setStudents(await getAllStudents());
     setLoading(false);
   };
 
@@ -30,22 +30,22 @@ export default function StudentsTab() {
     }
     setSaving(true);
     try {
-      addStudent(form);
+      await addStudent(form);
       toast.success("Student added");
       setDialogOpen(false);
       setForm({ student_id: "", first_name: "", last_name: "", email: "", grade: "" });
-      loadStudents();
+      await loadStudents();
     } catch (e: any) {
       toast.error(e.message);
     }
     setSaving(false);
   };
 
-  const handleToggleActive = (id: string) => {
+  const handleToggleActive = async (id: string) => {
     try {
-      toggleStudentActive(id);
+      await toggleStudentActive(id);
       toast.success("Student updated");
-      loadStudents();
+      await loadStudents();
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -66,9 +66,7 @@ export default function StudentsTab() {
           <Input placeholder="Search students..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="mr-1 h-4 w-4" /> Add Student</Button>
-          </DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> Add Student</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Add New Student</DialogTitle></DialogHeader>
             <div className="grid gap-3">
@@ -77,9 +75,7 @@ export default function StudentsTab() {
               <div><Label>Last Name *</Label><Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
               <div><Label>Email</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
               <div><Label>Grade</Label><Input value={form.grade} onChange={(e) => setForm({ ...form, grade: e.target.value })} /></div>
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Student"}
-              </Button>
+              <Button onClick={handleSave} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Student"}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -107,16 +103,8 @@ export default function StudentsTab() {
                   <td className="px-4 py-3 font-medium">{s.first_name} {s.last_name}</td>
                   <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{s.email || "—"}</td>
                   <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{s.grade || "—"}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${s.active ? "status-available" : "status-maintenance"}`}>
-                      {s.active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Button variant="outline" size="sm" onClick={() => handleToggleActive(s.id)}>
-                      {s.active ? "Deactivate" : "Activate"}
-                    </Button>
-                  </td>
+                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-1 text-xs font-medium ${s.active ? "status-available" : "status-maintenance"}`}>{s.active ? "Active" : "Inactive"}</span></td>
+                  <td className="px-4 py-3"><Button variant="outline" size="sm" onClick={() => handleToggleActive(s.id)}>{s.active ? "Deactivate" : "Activate"}</Button></td>
                 </tr>
               ))}
             </tbody>

@@ -19,7 +19,7 @@ export default function LoansTab() {
 
   const loadLoans = () => {
     setLoading(true);
-    setLoans(getAllLoans());
+    setLoans(await getAllLoans());
     setLoading(false);
   };
 
@@ -32,7 +32,6 @@ export default function LoansTab() {
       l.students?.first_name?.toLowerCase().includes(search.toLowerCase()) ||
       l.students?.last_name?.toLowerCase().includes(search.toLowerCase()) ||
       l.students?.student_id?.toLowerCase().includes(search.toLowerCase());
-
     if (filter === "active") return matchesSearch && l.status === "active" && !isOverdue(l);
     if (filter === "overdue") return matchesSearch && isOverdue(l);
     if (filter === "returned") return matchesSearch && l.status === "returned";
@@ -61,14 +60,7 @@ export default function LoansTab() {
         </div>
         <div className="flex gap-2">
           {filters.map((f) => (
-            <Badge
-              key={f.key}
-              variant={filter === f.key ? "default" : "secondary"}
-              className="cursor-pointer touch-target px-3 py-1.5"
-              onClick={() => setFilter(f.key)}
-            >
-              {f.label}
-            </Badge>
+            <Badge key={f.key} variant={filter === f.key ? "default" : "secondary"} className="cursor-pointer touch-target px-3 py-1.5" onClick={() => setFilter(f.key)}>{f.label}</Badge>
           ))}
         </div>
       </div>
@@ -101,26 +93,13 @@ export default function LoansTab() {
                     <div className="font-medium">{loan.items?.name}</div>
                     <div className="text-xs text-muted-foreground font-mono">#{loan.items?.asset_tag}</div>
                   </td>
-                  <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">
-                    {format(new Date(loan.checkout_at), "MMM d, yyyy")}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {format(new Date(loan.due_date), "MMM d, yyyy")}
-                  </td>
-                  <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">
-                    {loan.return_at ? format(new Date(loan.return_at), "MMM d, yyyy") : "—"}
-                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{format(new Date(loan.checkout_at), "MMM d, yyyy")}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{format(new Date(loan.due_date), "MMM d, yyyy")}</td>
+                  <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{loan.return_at ? format(new Date(loan.return_at), "MMM d, yyyy") : "—"}</td>
                   <td className="px-4 py-3">{statusBadge(loan)}</td>
                   <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground max-w-[200px]">
                     {loan.reason ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="block truncate">{loan.reason}</span>
-                          </TooltipTrigger>
-                          <TooltipContent><p className="max-w-xs">{loan.reason}</p></TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <TooltipProvider><Tooltip><TooltipTrigger asChild><span className="block truncate">{loan.reason}</span></TooltipTrigger><TooltipContent><p className="max-w-xs">{loan.reason}</p></TooltipContent></Tooltip></TooltipProvider>
                     ) : "—"}
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{loan.teacher || "—"}</td>

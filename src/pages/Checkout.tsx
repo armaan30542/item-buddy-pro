@@ -46,7 +46,7 @@ export default function Checkout() {
   const loadItems = () => {
     setLoading(true);
     try {
-      setItems(getAvailableItems(selectedCategory));
+      setItems(await getAvailableItems(selectedCategory));
     } catch {
       toast.error("Failed to load available items. Please try again.");
     } finally {
@@ -58,11 +58,8 @@ export default function Checkout() {
     resetTimer();
     setSelectedItems((prev) => {
       const next = new Set(prev);
-      if (next.has(itemId)) {
-        next.delete(itemId);
-      } else {
-        next.add(itemId);
-      }
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
       return next;
     });
   };
@@ -146,14 +143,11 @@ export default function Checkout() {
           </p>
         </div>
 
-        {/* Checkout details dialog */}
         <Dialog open={showForm} onOpenChange={(open) => { if (!open) closeCheckoutForm(); }}>
           <DialogContent className="sm:max-w-md" onOpenAutoFocus={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle>Confirm Check Out</DialogTitle>
             </DialogHeader>
-
-            {/* Selected items summary */}
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="mb-2 text-sm font-medium text-muted-foreground">Items ({selectedItemDetails.length})</p>
               <div className="flex flex-wrap gap-2">
@@ -164,52 +158,19 @@ export default function Checkout() {
                 ))}
               </div>
             </div>
-
             <div className="grid gap-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  How many days do you need them? <span className="text-destructive">*</span>
-                </label>
-                <Input
-                  ref={durationRef}
-                  type="text"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  onFocus={() => attachInput(durationRef.current, setDuration, duration, "numeric")}
-                  placeholder="Number of days"
-                  className="h-12 text-base"
-                />
+                <label className="mb-1 block text-sm font-medium text-foreground">How many days do you need them? <span className="text-destructive">*</span></label>
+                <Input ref={durationRef} type="text" value={duration} onChange={(e) => setDuration(e.target.value)} onFocus={() => attachInput(durationRef.current, setDuration, duration, "numeric")} placeholder="Number of days" className="h-12 text-base" />
               </div>
-
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  Why do you need them? <span className="text-destructive">*</span>
-                </label>
-                <Textarea
-                  ref={reasonRef}
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  onFocus={() => attachInput(reasonRef.current, setReason, reason, "full")}
-                  placeholder="e.g. Science project, class presentation..."
-                  className="min-h-[80px] text-base"
-                />
+                <label className="mb-1 block text-sm font-medium text-foreground">Why do you need them? <span className="text-destructive">*</span></label>
+                <Textarea ref={reasonRef} value={reason} onChange={(e) => setReason(e.target.value)} onFocus={() => attachInput(reasonRef.current, setReason, reason, "full")} placeholder="e.g. Science project, class presentation..." className="min-h-[80px] text-base" />
               </div>
-
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  Which teacher sent you? <span className="text-muted-foreground text-xs">(optional)</span>
-                </label>
-                <Input
-                  ref={teacherRef}
-                  value={teacher}
-                  onChange={(e) => setTeacher(e.target.value)}
-                  onFocus={() => attachInput(teacherRef.current, setTeacher, teacher, "alpha")}
-                  placeholder="Teacher name"
-                  className="h-12 text-base"
-                />
+                <label className="mb-1 block text-sm font-medium text-foreground">Which teacher sent you? <span className="text-muted-foreground text-xs">(optional)</span></label>
+                <Input ref={teacherRef} value={teacher} onChange={(e) => setTeacher(e.target.value)} onFocus={() => attachInput(teacherRef.current, setTeacher, teacher, "alpha")} placeholder="Teacher name" className="h-12 text-base" />
               </div>
-
-              {/* Confirmation summary */}
               {(duration || reason.trim()) && (
                 <div className="rounded-lg border bg-muted/20 p-3 text-sm space-y-1">
                   <p className="font-medium text-foreground">Summary</p>
@@ -221,20 +182,8 @@ export default function Checkout() {
                   {teacher.trim() && <p className="text-muted-foreground">Teacher: {teacher.trim()}</p>}
                 </div>
               )}
-
-              <Button
-                onClick={handleCheckout}
-                disabled={checkingOut}
-                className="h-12 text-base touch-target"
-              >
-                {checkingOut ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <>
-                    <CheckCircle2 className="mr-2 h-5 w-5" />
-                    Confirm Check Out ({selectedItems.size})
-                  </>
-                )}
+              <Button onClick={handleCheckout} disabled={checkingOut} className="h-12 text-base touch-target">
+                {checkingOut ? <Loader2 className="h-5 w-5 animate-spin" /> : <><CheckCircle2 className="mr-2 h-5 w-5" />Confirm Check Out ({selectedItems.size})</>}
               </Button>
             </div>
           </DialogContent>
@@ -243,57 +192,27 @@ export default function Checkout() {
         <div className="mb-4 flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              ref={searchRef}
-              placeholder="Search by name or asset tag..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => attachInput(searchRef.current, setSearch, search, "full")}
-              className="h-12 pl-10 text-base"
-            />
+            <Input ref={searchRef} placeholder="Search by name or asset tag..." value={search} onChange={(e) => setSearch(e.target.value)} onFocus={() => attachInput(searchRef.current, setSearch, search, "full")} className="h-12 pl-10 text-base" />
           </div>
         </div>
 
         <div className="mb-6 flex flex-wrap gap-2">
           {categories.map((cat) => (
-            <Badge
-              key={cat}
-              variant={selectedCategory === cat ? "default" : "secondary"}
-              className="cursor-pointer touch-target px-4 py-2 text-sm"
-              onClick={() => { detachInput(); setSelectedCategory(cat); }}
-            >
-              {cat}
-            </Badge>
+            <Badge key={cat} variant={selectedCategory === cat ? "default" : "secondary"} className="cursor-pointer touch-target px-4 py-2 text-sm" onClick={() => { detachInput(); setSelectedCategory(cat); }}>{cat}</Badge>
           ))}
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+          <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-xl border bg-card p-12 text-center">
-            <p className="text-lg text-muted-foreground">No available items found</p>
-          </div>
+          <div className="rounded-xl border bg-card p-12 text-center"><p className="text-lg text-muted-foreground">No available items found</p></div>
         ) : (
           <div className="grid gap-3">
             {filtered.map((item) => {
               const isSelected = selectedItems.has(item.id);
               return (
-                <div
-                  key={item.id}
-                  onClick={() => toggleItem(item.id)}
-                  className={`flex cursor-pointer items-center gap-4 rounded-xl border p-4 shadow-sm transition-all ${
-                    isSelected
-                      ? "border-primary bg-primary/5 shadow-md"
-                      : "bg-card hover:shadow-md"
-                  }`}
-                >
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={() => toggleItem(item.id)}
-                    className="h-6 w-6"
-                  />
+                <div key={item.id} onClick={() => toggleItem(item.id)} className={`flex cursor-pointer items-center gap-4 rounded-xl border p-4 shadow-sm transition-all ${isSelected ? "border-primary bg-primary/5 shadow-md" : "bg-card hover:shadow-md"}`}>
+                  <Checkbox checked={isSelected} onCheckedChange={() => toggleItem(item.id)} className="h-6 w-6" />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-foreground">{item.name}</span>
@@ -312,7 +231,6 @@ export default function Checkout() {
         )}
       </div>
 
-      {/* Floating checkout bar */}
       {selectedItems.size > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background p-4 shadow-lg">
           <div className="mx-auto flex max-w-3xl items-center justify-between">
@@ -321,13 +239,8 @@ export default function Checkout() {
               <span className="font-semibold">{selectedItems.size} item{selectedItems.size > 1 ? "s" : ""} selected</span>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setSelectedItems(new Set())} className="touch-target">
-                Clear
-              </Button>
-              <Button onClick={openCheckoutForm} className="touch-target">
-                <CheckCircle2 className="mr-1 h-4 w-4" />
-                Continue
-              </Button>
+              <Button variant="outline" onClick={() => setSelectedItems(new Set())} className="touch-target">Clear</Button>
+              <Button onClick={openCheckoutForm} className="touch-target"><CheckCircle2 className="mr-1 h-4 w-4" />Continue</Button>
             </div>
           </div>
         </div>
