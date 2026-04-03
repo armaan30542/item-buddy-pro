@@ -1,4 +1,5 @@
 // localStorage-based data store — no backend needed
+// On first run, loads seed data from /seed.json (edit that file to change defaults)
 
 function uuid(): string {
   return crypto.randomUUID();
@@ -20,6 +21,71 @@ function getTable<T>(key: string): T[] {
 
 function setTable<T>(key: string, data: T[]): void {
   localStorage.setItem(key, JSON.stringify(data));
+}
+
+// ─── Seed data loader ───
+
+const SEEDED_KEY = "ibp_seeded";
+
+export async function loadSeedIfNeeded(): Promise<void> {
+  if (localStorage.getItem(SEEDED_KEY)) return;
+
+  try {
+    const res = await fetch("/seed.json");
+    if (!res.ok) return;
+    const seed = await res.json();
+
+    if (seed.items?.length && getTable(ITEMS).length === 0) {
+      const items: Item[] = seed.items.map((item: any) => ({
+        id: uuid(),
+        asset_tag: item.asset_tag ?? "",
+        name: item.name ?? "",
+        category: item.category ?? "General",
+        description: item.description ?? null,
+        condition: item.condition ?? null,
+        location: item.location ?? null,
+        status: item.status ?? "available",
+        default_loan_duration: item.default_loan_duration ?? 1,
+        created_at: now(),
+        updated_at: now(),
+      }));
+      setTable(ITEMS, items);
+    }
+
+    if (seed.students?.length && getTable(STUDENTS).length === 0) {
+      const students: Student[] = seed.students.map((s: any) => ({
+        id: uuid(),
+        student_id: s.student_id ?? "",
+        first_name: s.first_name ?? "",
+        last_name: s.last_name ?? "",
+        email: s.email ?? null,
+        grade: s.grade ?? null,
+        max_items: s.max_items ?? 3,
+        active: s.active ?? true,
+        created_at: now(),
+        updated_at: now(),
+      }));
+      setTable(STUDENTS, students);
+    }
+
+    if (seed.settings) {
+      const settings: Setting[] = Object.entries(seed.settings).map(([key, value]) => ({
+        id: uuid(),
+        key,
+        value: String(value),
+        description: null,
+        created_at: now(),
+        updated_at: now(),
+      }));
+      if (getTable(SETTINGS).length === 0) {
+        setTable(SETTINGS, settings);
+      }
+    }
+  } catch {
+    // seed.json not found or invalid — that's fine, start empty
+  }
+
+  localStorage.setItem(SEEDED_KEY, "1");
 }
 
 // ─── Types ───

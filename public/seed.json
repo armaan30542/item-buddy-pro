@@ -1,0 +1,11 @@
+{
+  "students": [],
+  "items": [],
+  "loans": [],
+  "settings": {
+    "default_loan_duration": "1",
+    "max_items_per_student": "3",
+    "overdue_reminder_days": "1",
+    "school_name": ""
+  }
+}
