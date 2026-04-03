@@ -17,13 +17,13 @@ export default function StudentsTab() {
 
   useEffect(() => { loadStudents(); }, []);
 
-  const loadStudents = () => {
+  const loadStudents = async () => {
     setLoading(true);
     setStudents(await getAllStudents());
     setLoading(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.student_id || !form.first_name || !form.last_name) {
       toast.error("Student ID, first name, and last name are required");
       return;

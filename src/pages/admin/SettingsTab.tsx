@@ -18,7 +18,7 @@ export default function SettingsTab() {
     });
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
     try {
       await saveSettings(settings);

@@ -17,7 +17,7 @@ export default function LoansTab() {
 
   useEffect(() => { loadLoans(); }, []);
 
-  const loadLoans = () => {
+  const loadLoans = async () => {
     setLoading(true);
     setLoans(await getAllLoans());
     setLoading(false);

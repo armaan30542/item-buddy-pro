@@ -19,7 +19,7 @@ export default function Return() {
     if (student) loadLoans();
   }, [student]);
 
-  const loadLoans = () => {
+  const loadLoans = async () => {
     if (!student) return;
     setLoading(true);
     try {
@@ -31,10 +31,10 @@ export default function Return() {
     }
   };
 
-  const handleReturn = (loanId: string) => {
+  const handleReturn = async (loanId: string) => {
     setReturning(loanId);
     try {
-      returnItem(loanId);
+      await returnItem(loanId);
       toast.success("Item returned successfully!");
       await loadLoans();
     } catch (e: any) {

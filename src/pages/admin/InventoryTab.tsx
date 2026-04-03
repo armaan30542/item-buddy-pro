@@ -32,10 +32,11 @@ export default function InventoryTab() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [activeLoan, setActiveLoan] = useState<any>(null);
   const [loanHistory, setLoanHistory] = useState<any[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => { loadItems(); }, []);
 
-  const loadItems = () => {
+  const loadItems = async () => {
     setLoading(true);
     setItems(await getAllItems());
     setLoading(false);
@@ -54,7 +55,7 @@ export default function InventoryTab() {
     setDetailLoading(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.asset_tag || !form.name) {
       toast.error("Asset Tag and Name are required");
       return;

@@ -23,13 +23,10 @@ export default function MyItems() {
   useEffect(() => {
     if (student) {
       setLoading(true);
-      try {
-        setLoans(getStudentLoans(student.id));
-      } catch {
-        toast.error("Failed to load items");
-      } finally {
-        setLoading(false);
-      }
+      getStudentLoans(student.id)
+        .then(setLoans)
+        .catch(() => toast.error("Failed to load items"))
+        .finally(() => setLoading(false));
     }
   }, [student]);
 
@@ -38,10 +35,10 @@ export default function MyItems() {
     navigate("/");
   };
 
-  const handleReturn = (loanId: string) => {
+  const handleReturn = async (loanId: string) => {
     setReturning(loanId);
     try {
-      returnItem(loanId);
+      await returnItem(loanId);
       toast.success("Item returned successfully!");
       setLoans(await getStudentLoans(student!.id));
     } catch (e: any) {

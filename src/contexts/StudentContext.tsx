@@ -41,7 +41,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
   }, [student, startTimer]);
 
   const identify = useCallback(async (studentId: string) => {
-    const data = lookupStudent(studentId);
+    const data = await lookupStudent(studentId);
     if (data) {
       setStudent(data);
       return data;

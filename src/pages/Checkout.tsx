@@ -39,11 +39,11 @@ export default function Checkout() {
   useEffect(() => {
     if (student) {
       loadItems();
-      setCategories(getItemCategories());
+      getItemCategories().then(setCategories);
     }
   }, [student, selectedCategory]);
 
-  const loadItems = () => {
+  const loadItems = async () => {
     setLoading(true);
     try {
       setItems(await getAvailableItems(selectedCategory));
@@ -82,7 +82,7 @@ export default function Checkout() {
     setTeacher("");
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!student || selectedItems.size === 0) return;
     resetTimer();
     detachInput();
@@ -99,7 +99,7 @@ export default function Checkout() {
     try {
       const itemIds = Array.from(selectedItems);
       for (const itemId of itemIds) {
-        checkoutItem(student.id, itemId, days, reason.trim(), teacher.trim() || undefined);
+        await checkoutItem(student.id, itemId, days, reason.trim(), teacher.trim() || undefined);
       }
       toast.success(`${itemIds.length} item${itemIds.length > 1 ? "s" : ""} checked out successfully!`);
       closeCheckoutForm();
